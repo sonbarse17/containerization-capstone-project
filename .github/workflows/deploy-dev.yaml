@@ -82,3 +82,14 @@ jobs:
           --set image.backendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND \
           --set image.frontendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND \
           --wait --atomic
+
+    - name: Debug Kubernetes state (on failure)
+      if: failure()
+      run: |
+        kubectl get all -n dev
+        kubectl get events -n dev --sort-by=.lastTimestamp | tail -n 80
+        kubectl get pods -n dev -o wide
+        for p in $(kubectl get pods -n dev -o name); do
+          echo "=== $p ==="
+          kubectl describe -n dev $p | tail -n 120
+        done
