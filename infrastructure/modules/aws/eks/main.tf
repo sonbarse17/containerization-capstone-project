@@ -89,7 +89,7 @@ resource "aws_security_group" "node_group" {
   }
 
   tags = {
-    "Name"                                      = "${local.cluster_name}-node-sg"
+    "Name"                                        = "${local.cluster_name}-node-sg"
     "kubernetes.io/cluster/${local.cluster_name}" = "owned"
   }
 }
@@ -119,8 +119,6 @@ resource "aws_security_group_rule" "nodes_cluster_inbound" {
 # --- Launch Template for Node Group ---
 resource "aws_launch_template" "node_group" {
   name = "${local.cluster_name}-launch-template"
-
-  vpc_security_group_ids = [aws_security_group.node_group.id]
 
   tag_specifications {
     resource_type = "instance"
