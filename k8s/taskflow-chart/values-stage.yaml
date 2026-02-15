@@ -2,6 +2,8 @@ replicaCount: 2
 
 image:
   repository: taskflow-stage
+  backendRepository: taskflow-stage-backend
+  frontendRepository: taskflow-stage-frontend
   tag: "preview"
   pullPolicy: IfNotPresent
 

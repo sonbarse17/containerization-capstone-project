@@ -79,5 +79,6 @@ jobs:
         helm upgrade --install taskflow ./k8s/taskflow-chart \
           --namespace dev --create-namespace \
           --set image.tag=$IMAGE_TAG \
-          --set image.repository=$ECR_REGISTRY/taskflow-backend \
+          --set image.backendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND \
+          --set image.frontendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND \
           --wait --atomic

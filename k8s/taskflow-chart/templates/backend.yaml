@@ -20,7 +20,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
       - name: backend
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.backendRepository | default .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 5000
@@ -31,17 +31,17 @@ spec:
             configMapKeyRef:
               name: {{ .Release.Name }}-app-config
               key: DB_HOST
-        - name: POSTGRES_USER
+        - name: DB_USER
           valueFrom:
             secretKeyRef:
               name: {{ .Release.Name }}-db-creds
               key: username
-        - name: POSTGRES_PASSWORD
+        - name: DB_PASS
           valueFrom:
             secretKeyRef:
               name: {{ .Release.Name }}-db-creds
               key: password
-        - name: POSTGRES_DB
+        - name: DB_NAME
           valueFrom:
             configMapKeyRef:
               name: {{ .Release.Name }}-app-config
