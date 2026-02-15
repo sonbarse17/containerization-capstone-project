@@ -34,6 +34,10 @@ def health_check():
     else:
         return jsonify({"status": "unhealthy", "db_connection": "failed"}), 500
 
+@app.route('/live')
+def liveness_check():
+    return jsonify({"status": "alive"}), 200
+
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
     conn = get_db_connection()
