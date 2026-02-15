@@ -7,59 +7,6 @@
 **TaskFlow** is a comprehensive, production-grade cloud-native application platform, designed to demonstrate mastery in Platform Engineering. 
 It features a microservices-based Kanban application deployed across **AWS (EKS)** and **Azure (AKS)** using Infrastructure as Code (Terraform), Kubernetes (Helm), and CI/CD automation.
 
-### **Core Features** (Compliance Checklist)
-- ✅ **Containerization**: Multi-stage Docker builds, Distroless images, Vulnerability Scanning (Trivy).
-- ✅ **Infrastructure as Code**: Modular Terraform for VPC/VNet, EKS/AKS, ECR/ACR, S3/Storage.
-- ✅ **Environments**: Dev, Stage, Prod (paramterized via `.tfvars`).
-- ✅ **Orchestration**: Self-healing Deployments, StatefulSets (Postgres), Jobs/CronJobs, DaemonSets.
-- ✅ **Advanced Deployment**: Canary releases, HPA Autoscaling, Ingress Routing (ALB).
-- ✅ **Security**: IRSA (AWS), Managed Identity (Azure), Network Policies, RBAC, Secret Management.
-- ✅ **Automation**: GitHub Actions & Azure Pipelines for CI/CD with automated rollback.
-- ✅ **Observability**: Prometheus & Grafana stack (monitoring namespace).
-
----
-
-## **Architecture Diagram**
-
-```mermaid
-graph TD
-    subgraph "Cloud Provider (AWS/Azure)"
-        subgraph "Infrastructure (Terraform)"
-            VPC[VPC / VNet]
-            EKS[Kubernetes Cluster (EKS/AKS)]
-            S3[Object Storage (S3/Blob)]
-            KV[Secret Manager (Vault)]
-        end
-
-        subgraph "Kubernetes (Helm)"
-            Ingress[Ingress Controller (ALB/Nginx)]
-            
-            subgraph "TaskFlow Namespace"
-                Frontend[Frontend (Deploy)]
-                Backend[Backend (Deploy + HPA)]
-                DB[(Postgres StatefulSet)]
-                
-                Running[CronJob: Cleanup]
-            end
-            
-            subgraph "Monitoring Namespace"
-                Prom[Prometheus]
-                Graf[Grafana]
-            end
-        end
-    end
-
-    User --> Ingress
-    Ingress --> Frontend
-    Ingress --> Backend
-    Frontend --> Backend
-    Backend --> DB
-    Backend -- Read Secrets --> KV
-    Backend -- Store Files --> S3
-    Prom -- Scrape --> Backend
-```
-
----
 
 ## **Repository Structure**
 

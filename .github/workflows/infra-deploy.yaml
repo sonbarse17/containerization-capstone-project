@@ -34,7 +34,9 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Terraform Init (AWS Dev)
-      run: terraform init
+      env:
+        TF_BACKEND_BUCKET: "taskflow-terraform-state-${{ github.event.repository.name }}" # e.g. taskflow-terraform-state-myrepo
+      run: terraform init -backend-config="bucket=$TF_BACKEND_BUCKET" -backend-config="key=dev/terraform.tfstate"
       working-directory: ./infrastructure/environments/aws
 
     - name: Terraform Validate
@@ -70,7 +72,9 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Terraform Init
-      run: terraform init
+      env:
+        TF_BACKEND_BUCKET: "taskflow-terraform-state-${{ github.event.repository.name }}"
+      run: terraform init -backend-config="bucket=$TF_BACKEND_BUCKET" -backend-config="key=dev/terraform.tfstate"
       working-directory: ./infrastructure/environments/aws
 
     - name: Terraform Apply (Dev)
@@ -99,7 +103,9 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Terraform Init
-      run: terraform init
+      env:
+        TF_BACKEND_BUCKET: "taskflow-terraform-state-${{ github.event.repository.name }}"
+      run: terraform init -backend-config="bucket=$TF_BACKEND_BUCKET" -backend-config="key=prod/terraform.tfstate"
       working-directory: ./infrastructure/environments/aws
 
     - name: Terraform Apply (Prod)

@@ -25,13 +25,18 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    - name: Get AWS Account ID for ECR URL
+      run: |
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        echo "ECR_REGISTRY_URL=${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_ENV
+
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, Tag, and Push
       env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REGISTRY: ${{ env.ECR_REGISTRY_URL }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG ./backend
@@ -45,16 +50,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
+    - name: Configure AWS credentials (Deploy)
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Set dynamic env vars (Registry URL)
+      run: |
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        echo "ECR_REGISTRY_URL=${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_ENV
     
     - name: Update Kubeconfig
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBE_CONFIG_DATA_DEV }}" | base64 -d > ~/.kube/config
+      run: aws eks update-kubeconfig --name taskflow-dev-cluster --region ${{ env.AWS_REGION }}
         
     - name: Deploy to EKS (Dev Namespace)
       env:
         IMAGE_TAG: ${{ github.sha }}
-        ECR_REGISTRY: ${{ secrets.ECR_REGISTRY_URL }} 
+        ECR_REGISTRY: ${{ env.ECR_REGISTRY_URL }} 
       run: |
         helm upgrade --install taskflow ./k8s/taskflow-chart \
           --namespace dev --create-namespace \

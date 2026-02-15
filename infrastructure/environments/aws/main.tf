@@ -5,6 +5,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    # Bucket and Key passed via CLI (-backend-config)
+    # bucket       = "taskflow-terraform-state"
+    # key          = "dev/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+  }
 }
 
 provider "aws" {
