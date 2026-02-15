@@ -81,6 +81,8 @@ jobs:
           --set image.tag=$IMAGE_TAG \
           --set image.backendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND \
           --set image.frontendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND \
+          --set database.storageClassName=gp3 \
+          --timeout 10m0s \
           --wait --atomic
 
     - name: Debug Kubernetes state (on failure)
