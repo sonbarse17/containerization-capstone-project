@@ -9,6 +9,10 @@ on:
       - 'k8s/**'
   workflow_dispatch:
 
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: true
+
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY_BACKEND: taskflow-dev-backend
@@ -70,6 +74,15 @@ jobs:
     
     - name: Update Kubeconfig
       run: aws eks update-kubeconfig --name taskflow-dev-cluster --region ${{ env.AWS_REGION }}
+
+    - name: Clear pending Helm operation if needed
+      run: |
+        if helm status taskflow -n dev 2>/dev/null | grep -qE '^STATUS: pending-(install|upgrade|rollback)'; then
+          echo "Helm release is stuck in pending state. Uninstalling before retry..."
+          helm uninstall taskflow -n dev
+        else
+          echo "No pending Helm operation found."
+        fi
         
     - name: Deploy to EKS (Dev Namespace)
       env:
