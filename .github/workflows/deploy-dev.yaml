@@ -3,6 +3,11 @@ name: Deploy to DEV
 on:
   push:
     branches: [ "dev" ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'k8s/**'
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
