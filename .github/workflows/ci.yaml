@@ -41,7 +41,10 @@ jobs:
     - name: Build Images
       run: docker compose build
 
-    - name: Scan Images (Trivy)
+    - name: List Built Images
+      run: docker images | grep capstone-project
+
+    - name: Scan Backend Image (Trivy)
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'capstone-project-backend:latest'
