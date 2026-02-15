@@ -1,0 +1,94 @@
+# Default values for taskflow-chart (DEV environment).
+
+replicaCount: 1
+
+image:
+  repository: taskflow-dev
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+secrets:
+  useKeyVault: false
+  tenantId: ""
+  keyVaultName: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # The name of the service account to use.
+  name: "taskflow-app"
+  annotations: {} # IRSA annotations go here
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+ingress:
+  enabled: true
+  className: "alb"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+          servicePort: 80 # Frontend
+        - path: /api
+          pathType: Prefix
+          servicePort: 5000 # Backend
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube.
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Specific configurations
+backend:
+  containerPort: 5000
+  env:
+    # DB connection env vars will be populated from secrets/configmaps separately
+
+frontend:
+  containerPort: 8080
+
+database:
+  storageSize: "1Gi"
+  env:
+    postgresDb: "taskdb"
+    postgresUser: "postgres"
+    postgresPassword: "password" # Use secrets in prod!
+
+jobs:
+  cleanupSchedule: "0 0 * * *"

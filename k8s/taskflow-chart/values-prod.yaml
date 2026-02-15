@@ -1,0 +1,24 @@
+replicaCount: 3
+
+image:
+  repository: taskflow-prod
+  tag: "stable"
+  pullPolicy: Always
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+
+# In production, we assume secrets are managed externally (e.g. AWS Secrets Manager)
+# and injected as k8s Secrets, not hardcoded here.
+# However, for this demo chart, we'll override the secret management strategy if needed.

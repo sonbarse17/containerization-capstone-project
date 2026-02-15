@@ -1,0 +1,113 @@
+trigger:
+- main
+- dev
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # Container registry service connection established in Azure DevOps
+  azureSubscription: 'subscription-service-connection'
+  containerRegistry: 'taskflowacr.azurecr.io'
+  imageRepository: 'taskflow'
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build and Push Stage
+  jobs:
+  - job: Build
+    displayName: Build
+    steps:
+    - task: Docker@2
+      displayName: Build and Push Backend
+      inputs:
+        command: buildAndPush
+        repository: $(containerRegistry)/backend
+        dockerfile: backend/Dockerfile
+        containerRegistry: $(azureSubscription)
+        tags: |
+          $(tag)
+          latest
+
+    - task: Docker@2
+      displayName: Build and Push Frontend
+      inputs:
+        command: buildAndPush
+        repository: $(containerRegistry)/frontend
+        dockerfile: frontend/Dockerfile
+        containerRegistry: $(azureSubscription)
+        tags: |
+          $(tag)
+          latest
+          
+    - script: |
+        echo "Run Trivy Scan..."
+        # Install Trivy
+        wget https://github.com/aquasecurity/trivy/releases/download/v0.18.3/trivy_0.18.3_Linux-64bit.tar.gz
+        tar zxvf trivy_0.18.3_Linux-64bit.tar.gz
+        ./trivy image --exit-code 0 --severity HIGH,CRITICAL $(containerRegistry)/backend:$(tag)
+      displayName: 'Scan Images'
+
+- stage: DeployDev
+  displayName: Deploy to Dev
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/dev'))
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    environment: 'dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: KubernetesManifest@0
+            displayName: Create Secret
+            inputs:
+              action: createSecret
+              secretType: dockerRegistry
+              secretName: taskflow-acr-secret
+              dockerRegistryEndpoint: $(azureSubscription)
+              
+          - task: HelmDeploy@0
+            displayName: Helm Upgrade (Dev)
+            inputs:
+              connectionType: 'Azure Resource Manager'
+              azureSubscription: $(azureSubscription)
+              azureResourceGroup: 'taskflow-dev-rg'
+              kubernetesCluster: 'taskflow-dev-aks'
+              namespace: 'dev'
+              command: 'upgrade'
+              chartType: 'FilePath'
+              chartPath: './k8s/taskflow-chart'
+              releaseName: 'taskflow'
+              overrideValues: 'image.tag=$(tag),image.repository=$(containerRegistry)/backend'
+              arguments: '--create-namespace --wait --atomic'
+
+- stage: DeployProd
+  displayName: Deploy to Prod
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: HelmDeploy@0
+            displayName: Helm Upgrade (Prod)
+            inputs:
+              connectionType: 'Azure Resource Manager'
+              azureSubscription: $(azureSubscription)
+              azureResourceGroup: 'taskflow-prod-rg'
+              kubernetesCluster: 'taskflow-prod-aks'
+              namespace: 'prod'
+              command: 'upgrade'
+              chartType: 'FilePath'
+              chartPath: './k8s/taskflow-chart'
+              releaseName: 'taskflow'
+              valueFile: 'k8s/taskflow-chart/values-prod.yaml'
+              overrideValues: 'image.tag=$(tag),image.repository=$(containerRegistry)/backend'
+              arguments: '--create-namespace --wait --atomic'

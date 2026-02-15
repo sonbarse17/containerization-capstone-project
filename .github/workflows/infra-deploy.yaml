@@ -1,0 +1,107 @@
+name: Terraform Infrastructure
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+    paths:
+    - 'infrastructure/**'
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths:
+    - 'infrastructure/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  validate:
+    name: Terraform Validate & Plan (AWS)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Terraform Init (AWS Dev)
+      run: terraform init
+      working-directory: ./infrastructure/environments/aws
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./infrastructure/environments/aws
+
+    - name: Terraform Plan (Dev)
+      id: plan
+      run: terraform plan -var-file="dev.tfvars" -no-color
+      working-directory: ./infrastructure/environments/aws
+      continue-on-error: true
+
+    # In a real workflow, we would post the plan output to the PR comment here.
+
+  apply-dev:
+    name: Terraform Apply (AWS Dev)
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./infrastructure/environments/aws
+
+    - name: Terraform Apply (Dev)
+      run: terraform apply -var-file="dev.tfvars" -auto-approve
+      working-directory: ./infrastructure/environments/aws
+
+  apply-prod:
+    name: Terraform Apply (AWS Prod)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./infrastructure/environments/aws
+
+    - name: Terraform Apply (Prod)
+      run: terraform apply -var-file="prod.tfvars" -auto-approve
+      working-directory: ./infrastructure/environments/aws

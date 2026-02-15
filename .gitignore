@@ -1,0 +1,31 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!dev.tfvars
+!stage.tfvars
+!prod.tfvars
+.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Helm
+k8s/taskflow-chart/charts/
