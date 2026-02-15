@@ -30,6 +30,10 @@ services:
       database:
         condition: service_healthy
     restart: always
+    networks:
+      default:
+        aliases:
+          - taskflow-backend
 
   frontend:
     build: ./frontend

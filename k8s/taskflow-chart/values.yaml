@@ -87,6 +87,7 @@ frontend:
 
 database:
   storageSize: "1Gi"
+  storageClassName: ""
   env:
     postgresDb: "taskdb"
     postgresUser: "postgres"
