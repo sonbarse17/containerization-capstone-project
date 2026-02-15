@@ -1,11 +1,20 @@
 # TaskFlow - Cloud-Native Platform Engineering Capstone
 
-![TaskFlow Architecture](https://via.placeholder.com/800x400?text=TaskFlow+Architecture+Diagram)
-*(Placeholder: Generate diagram using Mermaid below)*
-
 ## Overview
 **TaskFlow** is a comprehensive, production-grade cloud-native application platform, designed to demonstrate mastery in Platform Engineering. 
 It features a microservices-based Kanban application deployed across **AWS (EKS)** and **Azure (AKS)** using Infrastructure as Code (Terraform), Kubernetes (Helm), and CI/CD automation.
+
+## Architecture
+
+![Architecture Diagram](docs/architecture_diagram.png)
+
+The platform demonstrates a complete cloud-native architecture with:
+- **Multi-cloud deployment** across AWS and Azure
+- **Automated CI/CD pipelines** using GitHub Actions and Azure DevOps
+- **Infrastructure as Code** with Terraform and remote state management
+- **Container orchestration** with Kubernetes (EKS/AKS)
+- **Security best practices** including IRSA, Managed Identity, and secrets management
+- **Observability** with Prometheus and Grafana
 
 
 ## **Repository Structure**
