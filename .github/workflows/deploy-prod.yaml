@@ -11,8 +11,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY_BACKEND: taskflow-backend
-  ECR_REPOSITORY_FRONTEND: taskflow-frontend
+  ECR_REPOSITORY_BACKEND: taskflow-prod-backend
+  ECR_REPOSITORY_FRONTEND: taskflow-prod-frontend
 
 jobs:
   build-push:
