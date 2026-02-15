@@ -92,3 +92,4 @@ helm upgrade --install taskflow ./k8s/taskflow-chart \
 ### **4. CI/CD Strategy**
 - **Decision**: Atomic Helm upgrades.
 - **Why**: Ensures if a deployment fails, it automatically rolls back to the previous stable state, minimizing downtime.
+# trigger dev infrastructure deployment
