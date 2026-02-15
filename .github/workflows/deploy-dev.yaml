@@ -83,6 +83,23 @@ jobs:
         else
           echo "No pending Helm operation found."
         fi
+
+    - name: Select storage class and clear stale DB PVC
+      run: |
+        if kubectl get storageclass gp3 >/dev/null 2>&1; then
+          STORAGE_CLASS=gp3
+        elif kubectl get storageclass gp2 >/dev/null 2>&1; then
+          STORAGE_CLASS=gp2
+        else
+          echo "Neither gp3 nor gp2 StorageClass exists in cluster." >&2
+          kubectl get storageclass
+          exit 1
+        fi
+        echo "Using storage class: $STORAGE_CLASS"
+        echo "STORAGE_CLASS=$STORAGE_CLASS" >> $GITHUB_ENV
+
+        # StatefulSet PVC can remain after uninstall; remove it so a new claim can be created with the chosen class.
+        kubectl delete pvc postgres-pvc-postgres-0 -n dev --ignore-not-found=true
         
     - name: Deploy to EKS (Dev Namespace)
       env:
@@ -94,7 +111,7 @@ jobs:
           --set image.tag=$IMAGE_TAG \
           --set image.backendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND \
           --set image.frontendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND \
-          --set database.storageClassName=gp3 \
+          --set database.storageClassName=$STORAGE_CLASS \
           --timeout 10m0s \
           --wait --atomic
 
