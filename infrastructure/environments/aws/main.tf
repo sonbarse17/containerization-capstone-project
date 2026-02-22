@@ -11,7 +11,6 @@ terraform {
     # bucket       = "taskflow-terraform-state"
     # key          = "dev/terraform.tfstate"
     region       = "us-east-1"
-    use_lockfile = true
   }
 }
 
@@ -33,7 +32,7 @@ module "eks" {
 
   environment  = var.environment
   project_name = var.project_name
-  
+
   vpc_id             = module.vpc.vpc_id
   public_subnet_ids  = module.vpc.public_subnets
   private_subnet_ids = module.vpc.private_subnets
@@ -109,7 +108,7 @@ data "aws_iam_policy_document" "app_s3_trust" {
 
     condition {
       test     = "StringEquals"
-      variable = "${replace(module.eks.oidc_provider_arn, "/^(.*provider/)/", "")}:sub"
+      variable = "${element(split("oidc-provider/", module.eks.oidc_provider_arn), 1)}:sub"
       values   = ["system:serviceaccount:${var.environment}:taskflow-app"]
     }
   }
@@ -133,7 +132,7 @@ resource "aws_iam_policy" "app_s3_policy" {
           "s3:PutObject",
           "s3:ListBucket"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = [
           module.data_bucket.bucket_arn,
           "${module.data_bucket.bucket_arn}/*"

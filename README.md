@@ -1,19 +1,28 @@
 # TaskFlow - Cloud-Native Platform Engineering Capstone
 
-![TaskFlow Architecture](https://via.placeholder.com/800x400?text=TaskFlow+Architecture+Diagram)
-*(Placeholder: Generate diagram using Mermaid below)*
-
 ## Overview
 **TaskFlow** is a comprehensive, production-grade cloud-native application platform, designed to demonstrate mastery in Platform Engineering. 
 It features a microservices-based Kanban application deployed across **AWS (EKS)** and **Azure (AKS)** using Infrastructure as Code (Terraform), Kubernetes (Helm), and CI/CD automation.
+
+## Architecture
+
+![Architecture Diagram](docs/architecture_diagram.png)
+
+The platform demonstrates a complete cloud-native architecture with:
+- **Multi-cloud deployment** across AWS and Azure
+- **Automated CI/CD pipelines** using GitHub Actions and Azure DevOps
+- **Infrastructure as Code** with Terraform and remote state management
+- **Container orchestration** with Kubernetes (EKS/AKS)
+- **Security best practices** including IRSA, Managed Identity, and secrets management
+- **Observability** with Prometheus and Grafana
 
 
 ## **Repository Structure**
 
 ```
 .
-├── backend/                 # Python Flask Microservice (Distroless Dockerfile)
-├── frontend/                # React/Nginx Microservice (Unprivileged Dockerfile)
+├── backend/                 # Python Flask Microservice (Distroless Dockerfile, Custom User)
+├── frontend/                # React/Vite Microservice (Express Proxy, Unprivileged node Dockerfile)
 ├── infrastructure/          # Terraform IaC
 │   ├── modules/             # Reusable Modules (vpc, eks, aks, s3...)
 │   └── environments/        # environment configs (aws/main.tf, azure/main.tf)
@@ -75,9 +84,10 @@ helm upgrade --install taskflow ./k8s/taskflow-chart \
 ## **Design Decisions & Trade-offs**
 
 ### **1. Container Security**
-- **Decision**: Use `gcr.io/distroless/python3` for backend.
-- **Why**: Drastically reduces attack surface (no shell, no package manager in prod).
-- **Trade-off**: Harder to debug (can't `exec` into pod easily), so we rely on logs and DaemonSet monitoring.
+- **Decision (Backend)**: Use `gcr.io/distroless/python3` and an explicit `taskflow` unprivileged user.
+- **Why**: Drastically reduces attack surface (no shell, no package manager in prod) and avoids running processes as root.
+- **Decision (Frontend)**: Replaced Nginx with a Node Express server in an Alpine container running as an unprivileged `taskflow` user.
+- **Why**: Eliminates Nginx-specific vulnerabilities, handles SPA routing neatly, and ensures robust unprivileged execution in Kubernetes.
 
 ### **2. Secret Management**
 - **Decision**: Use cloud-native identity (IRSA for AWS, Managed Identity for Azure).
@@ -92,3 +102,8 @@ helm upgrade --install taskflow ./k8s/taskflow-chart \
 ### **4. CI/CD Strategy**
 - **Decision**: Atomic Helm upgrades.
 - **Why**: Ensures if a deployment fails, it automatically rolls back to the previous stable state, minimizing downtime.
+
+### **5. Custom Networking & Secure Credentials**
+- **Decision**: Added a dedicated `taskflow-net` bridge network and shifted the PostgreSQL default user from `postgres` to `taskflow_admin`.
+- **Why**: Enhances inter-container communication isolation in dev/test and thwarts automated default credential scanning attacks.
+# trigger dev infrastructure deployment

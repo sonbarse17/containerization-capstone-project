@@ -81,7 +81,7 @@ stages:
               chartType: 'FilePath'
               chartPath: './k8s/taskflow-chart'
               releaseName: 'taskflow'
-              overrideValues: 'image.tag=$(tag),image.repository=$(containerRegistry)/backend'
+              overrideValues: 'image.tag=$(tag),image.backendRepository=$(containerRegistry)/backend,image.frontendRepository=$(containerRegistry)/frontend'
               arguments: '--create-namespace --wait --atomic'
 
 - stage: DeployProd
@@ -109,5 +109,5 @@ stages:
               chartPath: './k8s/taskflow-chart'
               releaseName: 'taskflow'
               valueFile: 'k8s/taskflow-chart/values-prod.yaml'
-              overrideValues: 'image.tag=$(tag),image.repository=$(containerRegistry)/backend'
+              overrideValues: 'image.tag=$(tag),image.backendRepository=$(containerRegistry)/backend,image.frontendRepository=$(containerRegistry)/frontend'
               arguments: '--create-namespace --wait --atomic'

@@ -2,6 +2,8 @@ replicaCount: 3
 
 image:
   repository: taskflow-prod
+  backendRepository: taskflow-prod-backend
+  frontendRepository: taskflow-prod-frontend
   tag: "stable"
   pullPolicy: Always
 

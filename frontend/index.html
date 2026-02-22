@@ -1,71 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .task-card {
-            transition: transform 0.2s;
-        }
-        .task-card:hover {
-            transform: translateY(-2px);
-        }
+      .task-card {
+        transition: transform 0.2s;
+      }
+      .task-card:hover {
+        transform: translateY(-2px);
+      }
     </style>
-</head>
-<body class="bg-gray-100 font-sans">
-    <div class="container mx-auto p-4">
-        <header class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-blue-600 mb-2">My TaskFlow</h1>
-            <p class="text-gray-600">A simple Kanban board demonstrating cloud-native principles</p>
-        </header>
-
-        <div class="mb-8 max-w-md mx-auto">
-            <div class="flex gap-2">
-                <input type="text" id="taskInput" placeholder="Enter a new task..." 
-                    class="flex-1 p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <button onclick="addTask()" 
-                    class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition shadow-md font-semibold">
-                    Add Task
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Todo Column -->
-            <div class="bg-gray-50 p-4 rounded-xl shadow-md border border-gray-200">
-                <h2 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2 flex justify-between items-center">
-                    To Do
-                    <span class="bg-gray-200 text-gray-600 text-sm py-1 px-3 rounded-full" id="todo-count">0</span>
-                </h2>
-                <div id="todo-list" class="space-y-3 min-h-[200px]">
-                    <!-- Tasks will appear here -->
-                </div>
-            </div>
-
-            <!-- In Progress Column -->
-            <div class="bg-blue-50 p-4 rounded-xl shadow-md border border-blue-100">
-                <h2 class="text-xl font-bold mb-4 text-blue-800 border-b border-blue-200 pb-2 flex justify-between items-center">
-                    In Progress
-                    <span class="bg-blue-200 text-blue-800 text-sm py-1 px-3 rounded-full" id="inprogress-count">0</span>
-                </h2>
-                <div id="inprogress-list" class="space-y-3 min-h-[200px]">
-                </div>
-            </div>
-
-            <!-- Done Column -->
-            <div class="bg-green-50 p-4 rounded-xl shadow-md border border-green-100">
-                <h2 class="text-xl font-bold mb-4 text-green-800 border-b border-green-200 pb-2 flex justify-between items-center">
-                    Done
-                    <span class="bg-green-200 text-green-800 text-sm py-1 px-3 rounded-full" id="done-count">0</span>
-                </h2>
-                <div id="done-list" class="space-y-3 min-h-[200px]">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+  </head>
+  <body class="bg-gray-100 font-sans">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

@@ -4,6 +4,8 @@ replicaCount: 1
 
 image:
   repository: taskflow-dev
+  backendRepository: taskflow-dev-backend
+  frontendRepository: taskflow-dev-frontend
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
@@ -85,6 +87,7 @@ frontend:
 
 database:
   storageSize: "1Gi"
+  storageClassName: ""
   env:
     postgresDb: "taskdb"
     postgresUser: "postgres"
@@ -92,3 +95,6 @@ database:
 
 jobs:
   cleanupSchedule: "0 0 * * *"
+
+# trigger deploy-dev workflow
+# trigger deploy-dev workflow (manual bump)

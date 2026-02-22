@@ -3,11 +3,20 @@ name: Deploy to DEV
 on:
   push:
     branches: [ "dev" ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'k8s/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: true
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY_BACKEND: taskflow-backend
-  ECR_REPOSITORY_FRONTEND: taskflow-frontend
+  ECR_REPOSITORY_BACKEND: taskflow-dev-backend
+  ECR_REPOSITORY_FRONTEND: taskflow-dev-frontend
 
 jobs:
   build-push:
@@ -65,6 +74,32 @@ jobs:
     
     - name: Update Kubeconfig
       run: aws eks update-kubeconfig --name taskflow-dev-cluster --region ${{ env.AWS_REGION }}
+
+    - name: Clear pending Helm operation if needed
+      run: |
+        if helm status taskflow -n dev 2>/dev/null | grep -qE '^STATUS: pending-(install|upgrade|rollback)'; then
+          echo "Helm release is stuck in pending state. Uninstalling before retry..."
+          helm uninstall taskflow -n dev
+        else
+          echo "No pending Helm operation found."
+        fi
+
+    - name: Select storage class and clear stale DB PVC
+      run: |
+        if kubectl get storageclass gp3 >/dev/null 2>&1; then
+          STORAGE_CLASS=gp3
+        elif kubectl get storageclass gp2 >/dev/null 2>&1; then
+          STORAGE_CLASS=gp2
+        else
+          echo "Neither gp3 nor gp2 StorageClass exists in cluster." >&2
+          kubectl get storageclass
+          exit 1
+        fi
+        echo "Using storage class: $STORAGE_CLASS"
+        echo "STORAGE_CLASS=$STORAGE_CLASS" >> $GITHUB_ENV
+
+        # StatefulSet PVC can remain after uninstall; remove it so a new claim can be created with the chosen class.
+        kubectl delete pvc postgres-pvc-postgres-0 -n dev --ignore-not-found=true
         
     - name: Deploy to EKS (Dev Namespace)
       env:
@@ -74,5 +109,19 @@ jobs:
         helm upgrade --install taskflow ./k8s/taskflow-chart \
           --namespace dev --create-namespace \
           --set image.tag=$IMAGE_TAG \
-          --set image.repository=$ECR_REGISTRY/taskflow-backend \
+          --set image.backendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND \
+          --set image.frontendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND \
+          --set database.storageClassName=$STORAGE_CLASS \
+          --timeout 10m0s \
           --wait --atomic
+
+    - name: Debug Kubernetes state (on failure)
+      if: failure()
+      run: |
+        kubectl get all -n dev
+        kubectl get events -n dev --sort-by=.lastTimestamp | tail -n 80
+        kubectl get pods -n dev -o wide
+        for p in $(kubectl get pods -n dev -o name); do
+          echo "=== $p ==="
+          kubectl describe -n dev $p | tail -n 120
+        done

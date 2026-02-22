@@ -3,11 +3,16 @@ name: Deploy to PROD
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'k8s/**'
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY_BACKEND: taskflow-backend
-  ECR_REPOSITORY_FRONTEND: taskflow-frontend
+  ECR_REPOSITORY_BACKEND: taskflow-prod-backend
+  ECR_REPOSITORY_FRONTEND: taskflow-prod-frontend
 
 jobs:
   build-push:
@@ -76,5 +81,6 @@ jobs:
           --namespace prod --create-namespace \
           -f k8s/taskflow-chart/values-prod.yaml \
           --set image.tag=$IMAGE_TAG \
-          --set image.repository=$ECR_REGISTRY/taskflow-backend \
+          --set image.backendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND \
+          --set image.frontendRepository=$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND \
           --wait --atomic --timeout 10m

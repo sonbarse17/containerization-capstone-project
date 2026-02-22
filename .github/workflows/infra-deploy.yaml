@@ -24,7 +24,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
-        terraform_version: 1.5.0
+        terraform_version: 1.10.0
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -49,7 +49,6 @@ jobs:
       working-directory: ./infrastructure/environments/aws
       continue-on-error: true
 
-    # In a real workflow, we would post the plan output to the PR comment here.
 
   apply-dev:
     name: Terraform Apply (AWS Dev)
