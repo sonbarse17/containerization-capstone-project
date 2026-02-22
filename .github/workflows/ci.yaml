@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ "main", "dev" ]
   push:
-    branches-ignore: [ "main", "dev" ] # Only run on feature branches, main/dev handled by deploy workflows
+    branches-ignore: [ "main", "dev" ] 
 
 env:
   ECR_REPOSITORY_BACKEND: taskflow-backend
@@ -52,6 +52,16 @@ jobs:
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'capstone-project-backend:latest'
+        format: 'table'
+        exit-code: '0'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Scan Frontend Image (Trivy)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'capstone-project-frontend:latest'
         format: 'table'
         exit-code: '0'
         ignore-unfixed: true

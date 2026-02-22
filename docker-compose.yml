@@ -3,18 +3,20 @@ services:
     image: postgres:13-alpine
     container_name: taskflow-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: taskflow_admin
+      POSTGRES_PASSWORD: SecureTaskflowPassword123!
       POSTGRES_DB: taskdb
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -U taskflow_admin" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - taskflow-net
 
   backend:
     build: ./backend
@@ -24,14 +26,14 @@ services:
     environment:
       DB_HOST: database
       DB_NAME: taskdb
-      DB_USER: postgres
-      DB_PASS: password
+      DB_USER: taskflow_admin
+      DB_PASS: SecureTaskflowPassword123!
     depends_on:
       database:
         condition: service_healthy
     restart: always
     networks:
-      default:
+      taskflow-net:
         aliases:
           - taskflow-backend
 
@@ -43,6 +45,12 @@ services:
     depends_on:
       - backend
     restart: always
+    networks:
+      - taskflow-net
+
+networks:
+  taskflow-net:
+    driver: bridge
 
 volumes:
   db_data:
